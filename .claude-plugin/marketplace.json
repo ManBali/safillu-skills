@@ -5,15 +5,15 @@
     "name": "ManBali"
   },
   "metadata": {
-    "description": "Claude Code 技能合集：Safillu 媒体生成、TT Image 2 生图、MiniMax H3 提示词优化",
-    "version": "1.1.0"
+    "description": "Claude Code 技能合集：Safillu 媒体生成、TT Image 2 生图、GEM 视频分析、去水印下载、MiniMax H3 提示词优化",
+    "version": "1.2.0"
   },
   "plugins": [
     {
       "name": "safillu-skills",
       "source": "./",
-      "description": "Safillu 媒体生成、TT Image 2 生图与 MiniMax H3 提示词优化技能合集",
-      "version": "1.1.0"
+      "description": "Safillu 媒体生成、TT Image 2 生图、GEM 视频分析、去水印下载与 MiniMax H3 提示词优化技能合集",
+      "version": "1.2.0"
     }
   ]
 }
