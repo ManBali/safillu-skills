@@ -15,17 +15,17 @@ allowed-tools:
 
 ## 首次使用：配置 key
 
-向技能提供方获取 API key，二选一：
+向技能提供方获取 API key。推荐在仓库目录运行 `python configure.py` 统一配置所有技能凭证（写入 `~/.claude-skills/keys.json`）。也可以单独配置：
 
 ```bash
-# 方式一：保存到本地 key 文件（推荐）
+# 方式一：写入统一配置文件
 python "<技能目录>/scripts/tt_generate.py" --login sk-xxxxxxxx
 
 # 方式二：环境变量（优先级最高）
 export TT_IMAGE_API_KEY=sk-xxxxxxxx          # Windows PowerShell: $env:TT_IMAGE_API_KEY="sk-xxxxxxxx"
 ```
 
-key 读取顺序：`TT_IMAGE_API_KEY` → `~/.tt-image/key` → 脚本同目录 `tt_image.key`。
+key 读取顺序：`TT_IMAGE_API_KEY` → `~/.claude-skills/keys.json` 的 `tt_image_api_key` → `~/.tt-image/key` → 脚本同目录 `tt_image.key`。
 
 ## 执行方式
 

@@ -44,5 +44,6 @@ foreach ($name in $Skills) {
 }
 
 Write-Host ""
-Write-Host "重启 Claude Code 后生效。safillu 技能需要配置 key："
-Write-Host "  python `"$Target\safillu\scripts\safillu.py`" login --key sk-xxxxxxxx"
+Write-Host "重启 Claude Code 后生效。"
+Write-Host "统一配置各技能 key（写入 ~/.claude-skills/keys.json）："
+Write-Host "  python `"$repo\configure.py`""

@@ -7,7 +7,7 @@ Claude Code 技能合集：一个仓库放多个技能，按需安装。
 | [`safillu`](skills/safillu/SKILL.md) | 调用 Safillu 生成 AI 媒体：Z-Image 文生图、Qwen3-TTS 语音、YuE2-BGM 纯音乐、MiniMax-H3-SelfLift 视频 | 是 |
 | [`tt-image`](skills/tt-image/SKILL.md) | 用 TT Image 2 生成/编辑图片：文生图、图生图、多图参考合成、海报/产品图/局部编辑 | 是 |
 | [`gem-vision`](skills/gem-vision/SKILL.md) | 用 GEM 3.5 flash 分析视频/图片：内容总结、时间线、口播字幕、视频问答，也可当多模态 LLM | 是 |
-| [`video-download`](skills/video-download/SKILL.md) | 抖音/快手/视频号/小红书/B站分享链去水印下载，含图集、音乐、封面 | 是（UID+接口地址） |
+| [`video-download`](skills/video-download/SKILL.md) | 抖音/快手/视频号/小红书/B站分享链去水印下载，含图集、音乐、封面 | 是（UID） |
 | [`minimax-h3-prompt-optimizer`](skills/minimax-h3-prompt-optimizer/SKILL.md) | MiniMax H3 / Hailuo 3.0 视频提示词的写作、优化与质检（格式规范、运镜、口型对准、失败诊断） | 否 |
 
 ## 安装
@@ -67,55 +67,64 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1 safillu
 
 ## 配置 key
 
-`tt-image`、`gem-vision`、`video-download`、`safillu` 需要向仓库维护者获取凭证后配置；`minimax-h3-prompt-optimizer` 不需要 key。`tt-image` 和 `gem-vision` 走同一个网关，通常共用同一把 key。
+需要凭证的技能：`safillu`、`tt-image`、`gem-vision`、`video-download`（`minimax-h3-prompt-optimizer` 不需要）。所有凭证统一存放在一个文件里：
 
-### safillu
+```
+~/.claude-skills/keys.json
+```
+
+该文件由脚本自动创建，权限 600。`tt-image` 和 `gem-vision` 走同一个网关，通常共用同一把 key。
+
+### 统一配置（推荐）
+
+在仓库目录运行交互式配置，按提示逐项填入，直接回车跳过：
 
 ```bash
+python configure.py
+```
+
+也可以一条命令写全部：
+
+```bash
+python configure.py --safillu sk-xxxx --lk888 sk-xxxx --video-uid <UID>
+```
+
+`--lk888` 会同时写入 TT Image 2 和 GEM Vision 的 key。查看当前配置（脱敏）：
+
+```bash
+python configure.py --show
+```
+
+### 单独配置某个技能
+
+各技能自带的登录命令也写入同一个文件，只安装了其中一个技能时也能用：
+
+```bash
+# safillu
 python ~/.claude/skills/safillu/scripts/safillu.py login --key sk-xxxxxxxx
-```
 
-或设置环境变量 `SAFILLU_API_KEY`，验证：
-
-```bash
-python ~/.claude/skills/safillu/scripts/safillu.py models
-```
-
-### tt-image
-
-```bash
+# tt-image
 python ~/.claude/skills/tt-image/scripts/tt_generate.py --login sk-xxxxxxxx
-```
 
-或设置环境变量 `TT_IMAGE_API_KEY`。
-
-### gem-vision
-
-```bash
+# gem-vision
 python ~/.claude/skills/gem-vision/scripts/gem_vision.py --login sk-xxxxxxxx
+
+# video-download
+python ~/.claude/skills/video-download/scripts/video_fetch.py --login <UID>
 ```
 
-或设置环境变量 `GEM_VISION_API_KEY`。
+### 环境变量（可选，优先级最高）
 
-### video-download
-
-需要服务方分配的 UID 和接口地址：
-
-```bash
-python ~/.claude/skills/video-download/scripts/video_fetch.py --login <UID> --base <接口地址>
-```
-
-也可用环境变量 `VIDEO_FETCH_UID`、`VIDEO_FETCH_API_BASE`。
-
-Windows PowerShell 设置环境变量：
+如果需要临时覆盖或不想落盘，可用环境变量：
 
 ```powershell
 $env:SAFILLU_API_KEY = "sk-xxxxxxxx"
 $env:TT_IMAGE_API_KEY = "sk-xxxxxxxx"
 $env:GEM_VISION_API_KEY = "sk-xxxxxxxx"
 $env:VIDEO_FETCH_UID = "<UID>"
-$env:VIDEO_FETCH_API_BASE = "<接口地址>"
 ```
+
+优先级：环境变量 > `~/.claude-skills/keys.json` > 旧的单技能 key 文件（`~/.safillu/key`、`~/.tt-image/key`、`~/.gem-vision/key`、`~/.video-download/config.json`）。
 
 ## 使用
 
@@ -144,8 +153,8 @@ git pull
 
 ## 安全
 
-- 仓库内不含任何 API key、账号 UID 或服务地址，请勿把自己的凭证提交进来。
-- key 保存在本机 `~/.safillu/key`、`~/.tt-image/key`、`~/.gem-vision/key`；video-download 的账号与接口地址保存在 `~/.video-download/config.json`（均为权限 600），也可用环境变量。
+- 仓库内不含任何 API key 或账号 UID，请勿把自己的凭证提交进来。
+- 凭证统一保存在本机 `~/.claude-skills/keys.json`（权限 600）；兼容读取旧的 `~/.safillu/key`、`~/.tt-image/key`、`~/.gem-vision/key`、`~/.video-download/config.json`，也可用环境变量覆盖。
 - `safillu` 回执中的参考素材 base64 会被替换为占位符，不会把整段媒体写进 json。
 - `.gitignore` 已忽略 `*.key`、回执和生成的媒体文件。
 
@@ -154,6 +163,7 @@ git pull
 ```
 safillu-skills/
 ├── .claude-plugin/marketplace.json   # 插件市场定义
+├── configure.py                      # 统一配置所有技能凭证
 ├── install.sh / install.ps1          # 安装脚本
 ├── skills/
 │   ├── safillu/

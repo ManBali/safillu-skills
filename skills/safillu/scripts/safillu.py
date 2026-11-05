@@ -74,6 +74,7 @@ POLL_CONFIG = {
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 KEY_FILE = os.path.join(os.path.expanduser("~"), ".safillu", "key")
 LOCAL_KEY_FILE = os.path.join(SCRIPT_DIR, "safillu.key")
+UNIFIED_KEY_FILE = os.path.join(os.path.expanduser("~"), ".claude-skills", "keys.json")
 
 
 class ApiError(Exception):
@@ -104,15 +105,46 @@ def readKeyFile(path):
         return ""
 
 
+def readUnified(field):
+    try:
+        with open(UNIFIED_KEY_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, ValueError):
+        return ""
+    value = data.get(field, "") if isinstance(data, dict) else ""
+    return str(value).strip() if value else ""
+
+
+def saveUnified(field, value):
+    data = {}
+    try:
+        with open(UNIFIED_KEY_FILE, "r", encoding="utf-8") as f:
+            loaded = json.load(f)
+            if isinstance(loaded, dict):
+                data = loaded
+    except (OSError, ValueError):
+        pass
+    data[field] = value
+    os.makedirs(os.path.dirname(UNIFIED_KEY_FILE), exist_ok=True)
+    with open(UNIFIED_KEY_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+        f.write("\n")
+    try:
+        os.chmod(UNIFIED_KEY_FILE, 0o600)
+    except OSError:
+        pass
+
+
 def apiKey():
     key = (
         os.environ.get("SAFILLU_API_KEY", "").strip()
+        or readUnified("safillu_api_key")
         or readKeyFile(KEY_FILE)
         or readKeyFile(LOCAL_KEY_FILE)
     )
     if not key:
         die(
-            "未找到 API key。先运行：\n"
+            "未找到 API key。先在仓库目录运行 python configure.py，或运行：\n"
             "  python %s login --key sk-xxxxxxxx\n"
             "或设置环境变量 SAFILLU_API_KEY。" % os.path.basename(__file__)
         )
@@ -400,14 +432,8 @@ def cmdLogin(args):
     key = (args.key or "").strip()
     if not key:
         die("请提供 --key sk-xxxxxxxx")
-    os.makedirs(os.path.dirname(KEY_FILE), exist_ok=True)
-    with open(KEY_FILE, "w", encoding="utf-8") as f:
-        f.write(key + "\n")
-    try:
-        os.chmod(KEY_FILE, 0o600)
-    except OSError:
-        pass
-    print("key 已保存到 %s（尾号 %s）" % (KEY_FILE, key[-4:]))
+    saveUnified("safillu_api_key", key)
+    print("key 已保存到 %s（尾号 %s）" % (UNIFIED_KEY_FILE, key[-4:]))
 
 
 def cmdModels(_):

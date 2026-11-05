@@ -12,15 +12,15 @@
 
 ## 配置 key
 
-向技能提供方获取 API key，二选一：
+向技能提供方获取 API key。推荐在仓库目录运行 `python configure.py` 统一配置所有技能凭证（写入 `~/.claude-skills/keys.json`），也可以单独配置：
 
 ```bash
-# 方式一：保存到本地
+# 方式一：写入统一配置文件
 python ~/.claude/skills/gem-vision/scripts/gem_vision.py --login sk-xxxxxxxx
 ```
 
 ```bash
-# 方式二：环境变量
+# 方式二：环境变量（优先级最高）
 export GEM_VISION_API_KEY=sk-xxxxxxxx
 ```
 
@@ -29,6 +29,8 @@ Windows PowerShell：
 ```powershell
 $env:GEM_VISION_API_KEY = "sk-xxxxxxxx"
 ```
+
+读取顺序：`GEM_VISION_API_KEY` → `~/.claude-skills/keys.json` 的 `gem_vision_api_key` → `~/.gem-vision/key` → 脚本同目录 `gem_vision.key`。
 
 ## 快速上手
 
@@ -114,5 +116,5 @@ prompt                    问题/指令（--chat 模式下可省略）
 
 ## 安全
 
-- 仓库与脚本内不含任何 API key；key 保存在本机 `~/.gem-vision/key`（权限 600）或环境变量中。
+- 仓库与脚本内不含任何 API key；key 保存在本机 `~/.claude-skills/keys.json`（权限 600）或环境变量中，旧的 `~/.gem-vision/key` 仍兼容读取。
 - 若使用脚本同目录的 `gem_vision.key`，不要提交进任何仓库（`.gitignore` 已忽略 `*.key`）。

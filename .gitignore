@@ -1,6 +1,7 @@
 # 本地 key / 配置
 *.key
 .safillu/
+.claude-skills/
 
 # 任务回执与生成产物
 safillu-*-receipt-*.json

@@ -44,15 +44,15 @@ Windows 下即 `%USERPROFILE%\.claude\skills\tt-image\`。
 
 ### 2.2 配置 API key
 
-向技能提供方获取 API key，二选一：
+向技能提供方获取 API key。推荐在仓库目录运行 `python configure.py` 统一配置所有技能凭证（写入 `~/.claude-skills/keys.json`）。也可以单独配置：
 
 ```bash
-# 方式一：保存到本地（推荐）
+# 方式一：写入统一配置文件
 python ~/.claude/skills/tt-image/scripts/tt_generate.py --login sk-xxxxxxxx
 ```
 
 ```bash
-# 方式二：环境变量
+# 方式二：环境变量（优先级最高）
 export TT_IMAGE_API_KEY=sk-xxxxxxxx
 ```
 
@@ -62,7 +62,7 @@ Windows PowerShell：
 $env:TT_IMAGE_API_KEY = "sk-xxxxxxxx"
 ```
 
-读取顺序：`TT_IMAGE_API_KEY` → `~/.tt-image/key` → 脚本同目录 `tt_image.key`。key 不会打印完整内容，保存后只显示尾号。
+读取顺序：`TT_IMAGE_API_KEY` → `~/.claude-skills/keys.json` 的 `tt_image_api_key` → `~/.tt-image/key` → 脚本同目录 `tt_image.key`。key 不会打印完整内容，保存后只显示尾号。
 
 ---
 
@@ -230,6 +230,6 @@ GET  https://api.lk888.ai/v1/media/status?task_id=X  查询任务
 
 ## 10. 安全提示
 
-- 仓库与脚本内不含任何 API key；key 保存在本机 `~/.tt-image/key`（权限 600）或环境变量中。
+- 仓库与脚本内不含任何 API key；key 保存在本机 `~/.claude-skills/keys.json`（权限 600）或环境变量中，旧的 `~/.tt-image/key` 仍兼容读取。
 - 若使用脚本同目录的 `tt_image.key`，不要把它提交进任何仓库（`.gitignore` 已忽略 `*.key`）。
 - 平台托管的 `result_url` 建议只作中转引用，重要成图以本地文件为准。

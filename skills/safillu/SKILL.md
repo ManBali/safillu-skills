@@ -14,17 +14,17 @@ allowed-tools:
 
 ## 首次使用：配置 key
 
-向服务提供方获取 API key，二选一：
+向服务提供方获取 API key。推荐在仓库目录运行 `python configure.py` 统一配置所有技能凭证（写入 `~/.claude-skills/keys.json`）。也可以单独配置：
 
 ```bash
-# 方式一：写进本地 key 文件（推荐，之后所有命令自动读取）
+# 方式一：写入统一配置文件
 python "$SF" login --key sk-xxxxxxxx
 
 # 方式二：环境变量（优先级最高）
 export SAFILLU_API_KEY=sk-xxxxxxxx            # Windows PowerShell: $env:SAFILLU_API_KEY="sk-xxxxxxxx"
 ```
 
-key 读取顺序：`SAFILLU_API_KEY` → `~/.safillu/key` → 脚本同目录 `safillu.key`。验证：
+key 读取顺序：`SAFILLU_API_KEY` → `~/.claude-skills/keys.json` 的 `safillu_api_key` → `~/.safillu/key` → 脚本同目录 `safillu.key`。验证：
 
 ```bash
 python "$SF" models

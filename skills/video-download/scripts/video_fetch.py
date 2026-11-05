@@ -3,14 +3,14 @@
 """视频/图集去水印解析与下载（调用去水印 API）。
 
 用法:
-  python video_fetch.py --login <UID> --base <接口地址>   # 首次配置
+  python video_fetch.py --login <UID>                     # 首次配置（接口地址已内置）
   python video_fetch.py <分享链接或整段分享文本>            # 解析并下载到 ./video-download-output
   python video_fetch.py <链接> --out D:/下载               # 指定输出目录
   python video_fetch.py <链接> --no-download               # 只解析，输出直链不下载
   python video_fetch.py --quota                            # 查询账号额度
 
-账号与接口地址：环境变量 VIDEO_FETCH_UID / VIDEO_FETCH_API_BASE →
-  ~/.video-download/config.json。两者都由服务提供方分配，不要提交进仓库。
+账号：环境变量 VIDEO_FETCH_UID → ~/.video-download/config.json。
+接口地址默认内置，可用 VIDEO_FETCH_API_BASE 或 --base 覆盖。
 """
 import argparse
 import json
@@ -23,6 +23,8 @@ import urllib.parse
 import urllib.request
 
 CONFIG_FILE = os.path.join(os.path.expanduser("~"), ".video-download", "config.json")
+UNIFIED_KEY_FILE = os.path.join(os.path.expanduser("~"), ".claude-skills", "keys.json")
+DEFAULT_API_BASE = "http://82.157.185.60:8182"
 UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/125.0 Safari/537.36")
 
@@ -41,13 +43,32 @@ def load_config():
         return {}
 
 
-def save_config(cfg):
-    os.makedirs(os.path.dirname(CONFIG_FILE), exist_ok=True)
-    with open(CONFIG_FILE, "w", encoding="utf-8") as f:
-        json.dump(cfg, f, ensure_ascii=False, indent=2)
+def read_unified(field):
+    try:
+        with open(UNIFIED_KEY_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, ValueError):
+        return ""
+    value = data.get(field, "") if isinstance(data, dict) else ""
+    return str(value).strip() if value else ""
+
+
+def save_unified(field, value):
+    data = {}
+    try:
+        with open(UNIFIED_KEY_FILE, "r", encoding="utf-8") as f:
+            loaded = json.load(f)
+            if isinstance(loaded, dict):
+                data = loaded
+    except (OSError, ValueError):
+        pass
+    data[field] = value
+    os.makedirs(os.path.dirname(UNIFIED_KEY_FILE), exist_ok=True)
+    with open(UNIFIED_KEY_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
         f.write("\n")
     try:
-        os.chmod(CONFIG_FILE, 0o600)
+        os.chmod(UNIFIED_KEY_FILE, 0o600)
     except OSError:
         pass
 
@@ -56,20 +77,21 @@ def resolve_uid(cli_uid):
     uid = (
         (cli_uid or "").strip()
         or os.environ.get("VIDEO_FETCH_UID", "").strip()
+        or read_unified("video_download_uid")
         or str(load_config().get("uid", "")).strip()
     )
     if not uid:
-        die("未配置 UID。先运行：\n  python video_fetch.py --login <UID> --base <接口地址>")
+        die("未配置 UID。先在仓库目录运行 python configure.py，或运行：\n  python video_fetch.py --login <UID>")
     return uid
 
 
 def resolve_api_base():
     base = (
         os.environ.get("VIDEO_FETCH_API_BASE", "").strip()
+        or read_unified("video_download_api_base")
         or str(load_config().get("base", "")).strip()
+        or DEFAULT_API_BASE
     )
-    if not base:
-        die("未配置接口地址。先运行：\n  python video_fetch.py --login <UID> --base <接口地址>")
     return base.rstrip("/")
 
 
@@ -130,7 +152,7 @@ def main():
     ap = argparse.ArgumentParser(description="视频/图集去水印解析与下载")
     ap.add_argument("input", nargs="?", help="视频分享链接，或整段分享文本（自动提取链接）")
     ap.add_argument("--login", metavar="UID", help="保存服务方分配的 UID 到 ~/.video-download/config.json")
-    ap.add_argument("--base", metavar="URL", help="接口地址；与 --login 一起保存，或单独更新")
+    ap.add_argument("--base", metavar="URL", help="覆盖接口地址（可选，默认已内置）")
     ap.add_argument("--out", default="./video-download-output", help="输出目录（默认 ./video-download-output）")
     ap.add_argument("--uid", default=None, help="临时覆盖 UID（默认读环境变量/配置文件）")
     ap.add_argument("--type", type=int, default=None, choices=(1, 2), help="强制 1=视频 2=图集（一般不用传）")
@@ -141,15 +163,11 @@ def main():
     args = ap.parse_args()
 
     if args.login or args.base:
-        cfg = load_config()
         if args.login:
-            cfg["uid"] = args.login.strip()
+            save_unified("video_download_uid", args.login.strip())
         if args.base:
-            cfg["base"] = args.base.strip().rstrip("/")
-        save_config(cfg)
-        print("已保存到 %s" % CONFIG_FILE)
-        if not cfg.get("base"):
-            print("提示：还没有配置接口地址，请补上 --base <接口地址>")
+            save_unified("video_download_api_base", args.base.strip().rstrip("/"))
+        print("已保存到 %s" % UNIFIED_KEY_FILE)
         return 0
 
     uid = resolve_uid(args.uid)

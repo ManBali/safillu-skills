@@ -44,5 +44,6 @@ for name in "$@"; do
 done
 
 echo
-echo "重启 Claude Code 后生效。safillu 技能需要配置 key："
-echo "  python \"$TARGET/safillu/scripts/safillu.py\" login --key sk-xxxxxxxx"
+echo "重启 Claude Code 后生效。"
+echo "统一配置各技能 key（写入 ~/.claude-skills/keys.json）："
+echo "  python \"$REPO_DIR/configure.py\""

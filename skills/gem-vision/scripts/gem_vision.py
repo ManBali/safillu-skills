@@ -38,6 +38,7 @@ DEFAULT_MODEL = "gem-3.5-flash"
 
 KEY_FILE = os.path.join(os.path.expanduser("~"), ".gem-vision", "key")
 LOCAL_KEY_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "gem_vision.key")
+UNIFIED_KEY_FILE = os.path.join(os.path.expanduser("~"), ".claude-skills", "keys.json")
 
 # 可整段内联上传的视频 MIME（Gemini 官方支持集）
 INLINE_VIDEO_MIME = {
@@ -68,9 +69,40 @@ def read_key_file(path):
         return ""
 
 
+def read_unified(field):
+    try:
+        with open(UNIFIED_KEY_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, ValueError):
+        return ""
+    value = data.get(field, "") if isinstance(data, dict) else ""
+    return str(value).strip() if value else ""
+
+
+def save_unified(field, value):
+    data = {}
+    try:
+        with open(UNIFIED_KEY_FILE, "r", encoding="utf-8") as f:
+            loaded = json.load(f)
+            if isinstance(loaded, dict):
+                data = loaded
+    except (OSError, ValueError):
+        pass
+    data[field] = value
+    os.makedirs(os.path.dirname(UNIFIED_KEY_FILE), exist_ok=True)
+    with open(UNIFIED_KEY_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+        f.write("\n")
+    try:
+        os.chmod(UNIFIED_KEY_FILE, 0o600)
+    except OSError:
+        pass
+
+
 def api_key():
     key = (
         os.environ.get("GEM_VISION_API_KEY", "").strip()
+        or read_unified("gem_vision_api_key")
         or read_key_file(KEY_FILE)
         or read_key_file(LOCAL_KEY_FILE)
     )
@@ -87,14 +119,8 @@ def save_key(key):
     key = (key or "").strip()
     if not key:
         die("请提供 key，例如：python gem_vision.py --login sk-xxxxxxxx")
-    os.makedirs(os.path.dirname(KEY_FILE), exist_ok=True)
-    with open(KEY_FILE, "w", encoding="utf-8") as f:
-        f.write(key + "\n")
-    try:
-        os.chmod(KEY_FILE, 0o600)
-    except OSError:
-        pass
-    out("key 已保存到 %s（尾号 %s）" % (KEY_FILE, key[-4:]))
+    save_unified("gem_vision_api_key", key)
+    out("key 已保存到 %s（尾号 %s）" % (UNIFIED_KEY_FILE, key[-4:]))
 
 
 def http_json(method, url, api_key, payload=None, timeout=300, retries=2):
