@@ -26,18 +26,19 @@ for name in "$@"; do
 
   dest="$TARGET/$name"
   # 覆盖安装前保留用户自己放的本地 key 文件
-  savedKey=""
-  if [ -f "$dest/safillu.key" ]; then
-    savedKey="$(cat "$dest/safillu.key")"
+  keyBackup="$(mktemp -d)"
+  if compgen -G "$dest/*.key" > /dev/null; then
+    cp "$dest"/*.key "$keyBackup"/
   fi
 
   rm -rf "$dest"
   cp -R "$SOURCE/$name" "$dest"
 
-  if [ -n "$savedKey" ]; then
-    printf '%s\n' "$savedKey" > "$dest/safillu.key"
-    chmod 600 "$dest/safillu.key"
+  if compgen -G "$keyBackup/*.key" > /dev/null; then
+    cp "$keyBackup"/*.key "$dest"/
+    chmod 600 "$dest"/*.key
   fi
+  rm -rf "$keyBackup"
 
   echo "已安装 $name -> $dest"
 done

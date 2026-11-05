@@ -26,14 +26,19 @@ foreach ($name in $Skills) {
     $to = Join-Path $Target $name
 
     # 覆盖安装前保留用户自己放的本地 key 文件
-    $savedKey = $null
-    $keyFile = Join-Path $to "safillu.key"
-    if (Test-Path $keyFile) { $savedKey = Get-Content -Raw $keyFile }
+    $savedKeys = @{}
+    if (Test-Path $to) {
+        Get-ChildItem -Path $to -Filter *.key -File | ForEach-Object {
+            $savedKeys[$_.Name] = Get-Content -Raw $_.FullName
+        }
+    }
 
     if (Test-Path $to) { Remove-Item -Recurse -Force $to }
     Copy-Item -Recurse -Force $from $to
 
-    if ($null -ne $savedKey) { Set-Content -Path $keyFile -Value $savedKey -NoNewline }
+    foreach ($keyName in $savedKeys.Keys) {
+        Set-Content -Path (Join-Path $to $keyName) -Value $savedKeys[$keyName] -NoNewline
+    }
 
     Write-Host "已安装 $name -> $to"
 }

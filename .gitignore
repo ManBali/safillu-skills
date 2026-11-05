@@ -11,6 +11,7 @@ safillu-*.mp3
 safillu-*.wav
 safillu-*.flac
 safillu-*.mp4
+tt-image-output/
 *.part
 
 # Python
